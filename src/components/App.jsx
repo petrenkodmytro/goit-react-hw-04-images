@@ -5,7 +5,6 @@ import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from 'components/Button/Button';
 import { Loader } from 'components/Loader/Loader';
-import { Modal } from 'components/Modal/Modal';
 import { fetchData } from 'api/fetchData';
 import { Alert } from './ImageGallery/ImageGallery.styled';
 
@@ -72,15 +71,15 @@ export const App = () => {
       <Searchbar onSubmit={handleSubmit} />
 
       <Layout>
-        <ImageGallery images={images} openModal={onOpenModal} />
+        <ImageGallery
+          images={images}
+          openModal={onOpenModal}
+          closeModal={onCloseModal}
+          showModal={showModal}
+          imgUrl={imgUrl}
+          tag={tag}
+        />
       </Layout>
-
-      {/* модалка */}
-      {showModal && (
-        <Modal closeModal={onCloseModal}>
-          <img src={imgUrl} alt={tag} />
-        </Modal>
-      )}
 
       {/* спінер */}
       <Loader isLoading={loading} />
