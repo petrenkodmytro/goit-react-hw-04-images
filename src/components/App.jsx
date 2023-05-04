@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { GlobalStyle } from './GlobalStyle';
 import { Layout } from './Layout/Layout';
 import { Searchbar } from './Searchbar/Searchbar';
@@ -6,116 +6,100 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from 'components/Button/Button';
 import { Loader } from 'components/Loader/Loader';
 import { Modal } from 'components/Modal/Modal';
-
 import { fetchData } from 'api/fetchData';
 import { Alert } from './ImageGallery/ImageGallery.styled';
 
-export class App extends Component {
-  state = {
-    textQuery: '',
-    images: [],
-    pageNumber: 1,
-    loading: false, // spiner
-    showModal: false,
-    error: null,
-    totalPage: null,
-  };
+export const App = () => {
+  const [textQuery, setTextQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState(null);
+  const [totalPage, setTotalPage] = useState(null);
+  const [imgUrl, setImgUrl] = useState('');
+  const [tag, setTag] = useState('');
 
   // записываем запрос поиска в App из Searchbar
-  handleSubmit = searchValue => {
-    this.setState({ textQuery: searchValue, pageNumber: 1 });
+  const handleSubmit = searchValue => {
+    setTextQuery(searchValue);
+    setPageNumber(1);
+    setImages([]);
+    setTotalPage(null);
   };
 
-  async componentDidUpdate(prevProps, prevState) {
-    // console.log(prevState);
-    let { pageNumber } = this.state;
-    const prevSearchValue = prevState.textQuery;
-    const nextSearchValue = this.state.textQuery;
-    
-    if (prevSearchValue !== nextSearchValue) {
-      this.setState({ pageNumber: 1, images: [] });
+  // запускается при первом рендере и после изменения textQuery и pageNumber
+  useEffect(() => {
+    // проверка, чтобы не было запроса при первом рендере
+    if (!textQuery) {
+      return;
     }
-
-    // Перевіряємо, чи змінились пропси запиту або state сторінки (pageNumber)
-    if (
-      prevSearchValue !== nextSearchValue ||
-      prevState.pageNumber !== pageNumber
-    ) {
-      // запуск спінера
-      this.setState({ loading: true, error: null });
-
-      // пішов запит на бекенд
+    // пішов запит на бекенд
+    const getImages = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetchData(nextSearchValue, pageNumber);
-        console.log('запит:', nextSearchValue);
+        const response = await fetchData(textQuery, pageNumber);
+        console.log('запит:', textQuery);
         console.log('номер сторінки:', pageNumber);
-        this.setState(prevState => ({
-          images:
-            pageNumber === 1
-              ? response.data.hits
-              : [...prevState.images, ...response.data.hits],
-          totalPage: response.data.totalHits,
-        }));
+        setImages(prev => [...prev, ...response.data.hits]);
+        setTotalPage(response.data.totalHits);
       } catch (error) {
-        this.setState({ error: 'Something wrong. Please try again.' });
+        setError('Something wrong. Please try again.');
       } finally {
-        this.setState({ loading: false });
+        setLoading(false);
       }
-    }
-  }
+    };
+    getImages();
+  }, [textQuery, pageNumber]);
 
-  onLoadMore = () => {
-    this.setState(prevState => ({ pageNumber: prevState.pageNumber + 1 }));
+  const onLoadMore = () => {
+    setPageNumber(prev => prev + 1);
   };
 
-  onOpenModal = (imgUrl, tag) => {
-    this.setState({ showModal: true, imgUrl, tag });
+  const onOpenModal = (imgUrl, tag) => {
+    setShowModal(true);
+    setImgUrl(imgUrl);
+    setTag(tag);
   };
 
-  onCloseModal = () => {
-    this.setState({ showModal: false });
+  const onCloseModal = () => {
+    setShowModal(false);
   };
 
-  render() {
-    return (
-      <>
-        <Searchbar onSubmit={this.handleSubmit} />
+  return (
+    <>
+      <Searchbar onSubmit={handleSubmit} />
 
-        <Layout>
-          <ImageGallery
-            images={this.state.images}
-            openModal={this.onOpenModal}
-          />
-        </Layout>
+      <Layout>
+        <ImageGallery images={images} openModal={onOpenModal} />
+      </Layout>
 
-        {/* модалка */}
-        {this.state.showModal && (
-          <Modal closeModal={this.onCloseModal}>
-            <img src={this.state.imgUrl} alt={this.state.tag} />
-          </Modal>
-        )}
+      {/* модалка */}
+      {showModal && (
+        <Modal closeModal={onCloseModal}>
+          <img src={imgUrl} alt={tag} />
+        </Modal>
+      )}
 
-        {/* спінер */}
-        <Loader isLoading={this.state.loading} />
+      {/* спінер */}
+      <Loader isLoading={loading} />
 
-        {/* кнопка завантажити ще */}
-        {this.state.totalPage / 12 > this.state.pageNumber && (
-          <Button loadMore={this.onLoadMore} />
-        )}
+      {/* кнопка завантажити ще */}
+      {totalPage / 12 > pageNumber && <Button loadMore={onLoadMore} />}
 
-        {/* нічого не знайшло */}
-        {this.state.totalPage === 0 && (
-          <Alert>
-            'Sorry, there are no images matching your search query. Please try
-            again.'
-          </Alert>
-        )}
+      {/* нічого не знайшло */}
+      {totalPage === 0 && (
+        <Alert>
+          'Sorry, there are no images matching your search query. Please try
+          again.'
+        </Alert>
+      )}
 
-        {/* помилка запиту */}
-        {this.state.error && <Alert>{this.state.error}</Alert>}
+      {/* помилка запиту */}
+      {error && <Alert>{error}</Alert>}
 
-        <GlobalStyle />
-      </>
-    );
-  }
-}
+      <GlobalStyle />
+    </>
+  );
+};

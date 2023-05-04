@@ -10,6 +10,7 @@ export const BtnLoadMore = styled.button`
   gap: 20px;
   padding: 8px;
   margin-top: 10px;
+  margin-bottom: 10px;
   margin-left: auto;
   margin-right: auto;
   border-radius: 5px;
