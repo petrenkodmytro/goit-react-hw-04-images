@@ -7,6 +7,7 @@ import { Button } from 'components/Button/Button';
 import { Loader } from 'components/Loader/Loader';
 import { fetchData } from 'api/fetchData';
 import { Alert } from './ImageGallery/ImageGallery.styled';
+import ScrollToTop from 'react-scroll-to-top';
 
 export const App = () => {
   const [textQuery, setTextQuery] = useState('');
@@ -97,6 +98,8 @@ export const App = () => {
 
       {/* помилка запиту */}
       {error && <Alert>{error}</Alert>}
+
+      <ScrollToTop />
 
       <GlobalStyle />
     </>

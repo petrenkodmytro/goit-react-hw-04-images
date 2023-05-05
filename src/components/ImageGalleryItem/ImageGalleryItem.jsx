@@ -23,9 +23,7 @@ export const ImageGalleryItem = ({
 
       {/* модалка */}
       {showModal && (
-        <Modal closeModal={closeModal}>
-          <img src={imgUrl} alt={tag} />
-        </Modal>
+        <Modal closeModal={closeModal} imgUrl={imgUrl} tag={tag}/>
       )}
     </>
   );
